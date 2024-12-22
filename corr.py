@@ -9,6 +9,18 @@ class Corr:
         y = c["y"]
         return Corr(x, y)
 
+    def left(self):
+        return Corr(self.x-1, self.y)
+
+    def right(self):
+        return Corr(self.x+1, self.y)
+
+    def up(self):
+        return Corr(self.x, self.y+1)
+    
+    def down(self):
+        return Corr(self.x, self.y-1)
+
     def __eq__(self, other):
         if not isinstance(other, Corr):
             return False

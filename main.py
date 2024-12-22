@@ -40,6 +40,36 @@ def start(game_state: typing.Dict):
 def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
+def look(blocked: set[Corr], food: set[Corr], loc: Corr) -> int:
+    score = 0
+    weight = 32
+    foodWeight = 10
+
+    if loc not in blocked:
+        score += 128
+
+    if loc in food:
+        score += foodWeight
+
+    if loc.left() not in blocked:
+        score += weight
+    if loc.right() not in blocked: 
+        score += weight
+    if loc.up() not in blocked:
+        score += weight
+    if loc.down() not in blocked: 
+        score += weight
+
+    if loc.left() in food:
+        score += foodWeight
+    if loc.right() in food: 
+        score += foodWeight
+    if loc.up() in food:
+        score += foodWeight
+    if loc.down() in food: 
+        score += foodWeight
+
+    return score
 
 # move is called on every turn and returns your next move
 # Valid moves are "up", "down", "left", or "right"
@@ -47,11 +77,13 @@ def end(game_state: typing.Dict):
 def move(game_state: typing.Dict) -> typing.Dict:
 
     blocked = set()
-    is_move_safe = {"up": True, "down": True, "left": True, "right": True}
+    food = set()
+    is_move_safe = {"up": 0, "down": 0, "left": 0, "right": 0}
 
-    # We've included code to prevent your Battlesnake from moving backwards
     my_head = Corr.fromObj(game_state["you"]["body"][0])  # Coordinates of your head
-    #my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
+
+    for f in game_state["board"]["food"]:
+        food.add(Corr.fromObj(f))
 
     for body in game_state["you"]["body"]:
         blocked.add(Corr.fromObj(body))
@@ -67,62 +99,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
         blocked.add(Corr(-1, y))
         blocked.add(Corr(width, y))
 
-    for b in blocked:
-        print(f"blocks {b.x} {b.y}")
+    is_move_safe["left"] = look(blocked, food, my_head.left());
+    is_move_safe["right"] = look(blocked, food, my_head.right());
+    is_move_safe["up"] = look(blocked, food, my_head.up());
+    is_move_safe["down"] = look(blocked, food, my_head.down());
 
-    if Corr(my_head.x-1, my_head.y) in blocked:  # Neck is left of head, don't move left
-        is_move_safe["left"] = False
-        print("left not safe")
 
-    if Corr(my_head.x+1, my_head.y) in blocked:  # Neck is right of head, don't move right
-        is_move_safe["right"] = False
-        print("right not safe")
-
-    if Corr(my_head.x, my_head.y-1) in blocked:  # Neck is below head, don't move down
-        is_move_safe["down"] = False
-        print("down not safe")
-
-    if Corr(my_head.x, my_head.y+1) in blocked:  # Neck is above head, don't move up
-        is_move_safe["up"] = False
-        print("up not safe")
-
-    # if my_neck["x"] < my_head["x"]:  # Neck is left of head, don't move left
-    #     is_move_safe["left"] = False
-
-    # elif my_neck["x"] > my_head["x"]:  # Neck is right of head, don't move right
-    #     is_move_safe["right"] = False
-
-    # elif my_neck["y"] < my_head["y"]:  # Neck is below head, don't move down
-    #     is_move_safe["down"] = False
-
-    # elif my_neck["y"] > my_head["y"]:  # Neck is above head, don't move up
-    #     is_move_safe["up"] = False
-
-    # TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
-    # board_width = game_state['board']['width']
-    # board_height = game_state['board']['height']
-
-    # TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-    # my_body = game_state['you']['body']
-
-    # TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
-    # opponents = game_state['board']['snakes']
-
-    # Are there any safe moves left?
-    safe_moves = []
-    for move, isSafe in is_move_safe.items():
-        if isSafe:
-            safe_moves.append(move)
-
-    if len(safe_moves) == 0:
-        print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
-        return {"move": "down"}
-
-    # Choose a random move from the safe ones
-    next_move = random.choice(safe_moves)
-
-    # TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-    # food = game_state['board']['food']
+    highest = sorted(is_move_safe.items(), key=lambda item: item[1], reverse=True)
+    print(highest)
+    (next_move, score) = highest[0]
 
     print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
