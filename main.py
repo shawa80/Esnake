@@ -46,7 +46,10 @@ def look(blocked: set[Corr], food: set[Corr], danger: set[Corr], loc: Corr) -> i
     foodWeight = 10
 
     if loc not in blocked:
-        score += 128
+        if loc in danger:
+            score += 128/2
+        else:
+            score += 128
 
     if loc in food:
         score += foodWeight
@@ -98,9 +101,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     my_head = Corr.fromObj(game_state["you"]["body"][0])  # Coordinates of your head
     my_health = game_state["you"]["health"]
+    my_length = len(game_state["you"]["body"])
 
     for s in game_state["board"]["snakes"]:
-        if s["health"] >= my_health:
+        if len(s["body"]) >= my_length:
             d = Corr.fromObj(s["head"])
             snakeDanger.add(d.left())
             snakeDanger.add(d.right())
