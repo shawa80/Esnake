@@ -40,7 +40,7 @@ def start(game_state: typing.Dict):
 def end(game_state: typing.Dict):
     print("GAME OVER\n")
 
-def look(blocked: set[Corr], food: set[Corr], loc: Corr) -> int:
+def look(blocked: set[Corr], food: set[Corr], danger: set[Corr], loc: Corr) -> int:
     score = 0
     weight = 32
     foodWeight = 10
@@ -52,13 +52,28 @@ def look(blocked: set[Corr], food: set[Corr], loc: Corr) -> int:
         score += foodWeight
 
     if loc.left() not in blocked:
-        score += weight
+        if loc.left() in danger:
+            score += weight/2
+        else:
+            score += weight
+
     if loc.right() not in blocked: 
-        score += weight
+        if loc.right() in danger:
+            score += weight/2
+        else:
+            score += weight
+
     if loc.up() not in blocked:
-        score += weight
+        if loc.up() in danger:
+            score += weight/2
+        else:
+            score += weight
+
     if loc.down() not in blocked: 
-        score += weight
+        if loc.down() in danger:
+            score += weight/2
+        else:
+            score += weight
 
     if loc.left() in food:
         score += foodWeight
@@ -78,9 +93,19 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     blocked = set()
     food = set()
+    snakeDanger = set()
     is_move_safe = {"up": 0, "down": 0, "left": 0, "right": 0}
 
     my_head = Corr.fromObj(game_state["you"]["body"][0])  # Coordinates of your head
+    my_health = game_state["you"]["health"]
+
+    for s in game_state["board"]["snakes"]:
+        if s["health"] >= my_health:
+            d = Corr.fromObj(s["head"])
+            snakeDanger.add(d.left())
+            snakeDanger.add(d.right())
+            snakeDanger.add(d.up())
+            snakeDanger.add(d.down())
 
     for f in game_state["board"]["food"]:
         food.add(Corr.fromObj(f))
@@ -99,10 +124,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
         blocked.add(Corr(-1, y))
         blocked.add(Corr(width, y))
 
-    is_move_safe["left"] = look(blocked, food, my_head.left());
-    is_move_safe["right"] = look(blocked, food, my_head.right());
-    is_move_safe["up"] = look(blocked, food, my_head.up());
-    is_move_safe["down"] = look(blocked, food, my_head.down());
+    is_move_safe["left"] = look(blocked, food, snakeDanger, my_head.left());
+    is_move_safe["right"] = look(blocked, food, snakeDanger, my_head.right());
+    is_move_safe["up"] = look(blocked, food, snakeDanger, my_head.up());
+    is_move_safe["down"] = look(blocked, food, snakeDanger, my_head.down());
 
 
     highest = sorted(is_move_safe.items(), key=lambda item: item[1], reverse=True)
