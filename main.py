@@ -42,41 +42,56 @@ def end(game_state: typing.Dict):
 
 def look(blocked: set[Corr], food: set[Corr], danger: set[Corr], loc: Corr) -> int:
     score = 0
-    weight = 32
+    weight1 = 128
+    weight2 = 32
     foodWeight = 10
 
     if loc not in blocked:
         if loc in danger:
-            score += 128/2
+            score += (weight1/2)
         else:
-            score += 128
+            score += weight1
 
-    if loc in food:
-        score += foodWeight
+    print(f"*loc check {score}")
+
+    if score == 0:
+        return 0
 
     if loc.left() not in blocked:
         if loc.left() in danger:
-            score += weight/2
+            score += weight2/2
         else:
-            score += weight
+            score += weight2
 
     if loc.right() not in blocked: 
         if loc.right() in danger:
-            score += weight/2
+            score += weight2/2
         else:
-            score += weight
+            score += weight2
 
     if loc.up() not in blocked:
         if loc.up() in danger:
-            score += weight/2
+            score += weight2/2
         else:
-            score += weight
+            score += weight2
 
     if loc.down() not in blocked: 
         if loc.down() in danger:
-            score += weight/2
+            score += weight2/2
         else:
-            score += weight
+            score += weight2
+    
+    print(f"area check {score}")
+
+    
+    print(f"food check {score}")
+
+    #if we have two exits, increase food weight
+    if score == (weight1 + weight2 + weight2):
+        foodWeight = weight2 + 1
+
+    if loc in food:
+        score += foodWeight
 
     if loc.left() in food:
         score += foodWeight
@@ -87,12 +102,15 @@ def look(blocked: set[Corr], food: set[Corr], danger: set[Corr], loc: Corr) -> i
     if loc.down() in food: 
         score += foodWeight
 
+    print(f"area food check {score}")
     return score
 
 # move is called on every turn and returns your next move
 # Valid moves are "up", "down", "left", or "right"
 # See https://docs.battlesnake.com/api/example-move for available data
 def move(game_state: typing.Dict) -> typing.Dict:
+
+    print(f"turn {game_state["turn"]}")
 
     blocked = set()
     food = set()
@@ -102,9 +120,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     my_head = Corr.fromObj(game_state["you"]["body"][0])  # Coordinates of your head
     my_health = game_state["you"]["health"]
     my_length = len(game_state["you"]["body"])
+    my_id = game_state["you"]["id"]
 
     for s in game_state["board"]["snakes"]:
-        if len(s["body"]) >= my_length:
+        if len(s["body"]) >= my_length and s["id"] != my_id:
             d = Corr.fromObj(s["head"])
             snakeDanger.add(d.left())
             snakeDanger.add(d.right())
