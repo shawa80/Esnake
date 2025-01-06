@@ -110,7 +110,7 @@ def look(blocked: set[Corr], food: set[Corr], danger: set[Corr], loc: Corr) -> i
 # See https://docs.battlesnake.com/api/example-move for available data
 def move(game_state: typing.Dict) -> typing.Dict:
 
-    print(f"turn {game_state["turn"]}")
+    print(f"turn {game_state['turn']}")
 
     blocked = set()
     food = set()
